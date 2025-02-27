@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import appLogo from '/favicon.svg'
 import PWABadge from './PWABadge.jsx'
@@ -6,6 +6,31 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handler = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === "accepted") {
+          console.log("PWA Installed");
+        }
+        setDeferredPrompt(null);
+      });
+    }
+  };
 
   return (
     <>
@@ -17,7 +42,7 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>PwaApp</h1>
+      <h1>Vite+PWA+React</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
@@ -30,6 +55,18 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <PWABadge />
+
+      {
+        deferredPrompt && (
+          <button
+            onClick={handleInstall}
+            className="p-2 bg-blue-600 text-white rounded"
+          >
+            Download App
+          </button>
+        )
+      }
+      
     </>
   )
 }
